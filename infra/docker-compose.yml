@@ -1,0 +1,36 @@
+services:
+  bitcoin:
+    image: ruimarinho/bitcoin-core:24
+    container_name: corecraft-bitcoin
+    network_mode: host
+    restart: unless-stopped
+    user: bitcoin
+    volumes:
+      - bitcoin-data:/home/bitcoin/.bitcoin
+      - ./bitcoin/bitcoin.conf:/home/bitcoin/.bitcoin/bitcoin.conf:ro
+    command:
+      - -conf=/home/bitcoin/.bitcoin/bitcoin.conf
+      - -datadir=/home/bitcoin/.bitcoin
+      - -printtoconsole
+
+  flask:
+    build:
+      context: ..
+      dockerfile: infra/flask/Dockerfile
+    container_name: corecraft-flask
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      RPC_HOST: ${RPC_HOST:-127.0.0.1}
+      RPC_PORT: ${RPC_PORT:-58443}
+      RPC_USER: ${RPC_USER:-teste}
+      RPC_PASS: ${RPC_PASS:-teste}
+      RPC_WALLET: ${RPC_WALLET:-}
+      BTC_NETWORK: ${BTC_NETWORK:-signet}
+      BTC_DATADIR: ${BTC_DATADIR:-/home/bitcoin/.bitcoin}
+      FLASK_ENV: ${FLASK_ENV:-production}
+    depends_on:
+      - bitcoin
+
+volumes:
+  bitcoin-data:
